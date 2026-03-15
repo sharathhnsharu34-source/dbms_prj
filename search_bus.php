@@ -1,34 +1,74 @@
 <?php
 include("db/connect.php");
 
-$source = trim($_POST['source']);
-$destination = trim($_POST['destination']);
+$source=$_POST['source'];
+$destination=$_POST['destination'];
 
-$sql = "SELECT * FROM buses WHERE source=? AND destination=?";
-$stmt = $conn->prepare($sql);
+$sql="SELECT * FROM buses WHERE source='$source' AND destination='$destination'";
+$result=$conn->query($sql);
+?>
 
-$stmt->bind_param("ss",$source,$destination);
-$stmt->execute();
+<!DOCTYPE html>
+<html>
+<head>
+<title>Available Buses</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
 
-$result = $stmt->get_result();
+<body>
 
-if($result->num_rows > 0){
+<div class="navbar">
+<h1>Available Buses</h1>
+</div>
 
-echo "<h2>Available Buses</h2>";
+<div class="container">
 
-while($row = $result->fetch_assoc()){
+<table>
 
-echo "Bus: ".$row['bus_name']."<br>";
-echo "Departure: ".$row['departure_time']."<br>";
-echo "Price: ".$row['price']."<br>";
+<tr>
+<th>Bus Name</th>
+<th>Departure</th>
+<th>Arrival</th>
+<th>Price</th>
+<th>Book</th>
+</tr>
 
-echo "<a href='book.php?bus_id=".$row['bus_id']."'>Book Seat</a>";
+<?php
 
-echo "<hr>";
+if($result->num_rows>0){
+
+while($row=$result->fetch_assoc()){
+
+echo "<tr>";
+
+echo "<td>".$row['bus_name']."</td>";
+echo "<td>".$row['departure_time']."</td>";
+echo "<td>".$row['arrival_time']."</td>";
+echo "<td>₹".$row['price']."</td>";
+
+echo "<td>
+<a class='book-btn' href='book.php?bus_id=".$row['bus_id']."'>Book</a>
+</td>";
+
+echo "</tr>";
 
 }
 
 }else{
-echo "No buses available";
+
+echo "<tr><td colspan='5'>No buses available</td></tr>";
+
 }
+
 ?>
+
+</table>
+
+<br>
+
+<a href="index.php" class="back-btn">Search Again</a>
+
+</div>
+
+</body>
+</html>

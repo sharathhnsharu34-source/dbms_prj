@@ -1,6 +1,6 @@
 <?php
 include("../db/connect.php");
-
+echo "<h1 style='text-align:center;'>Admin Dashboard</h1>";
 /* Get all buses that have bookings */
 
 $bus_query = "
@@ -49,7 +49,8 @@ echo "</table><br><br>";
 ?>
 
 while($row=$result->fetch_assoc()){
-
+    
+echo "<h1 style='text-align:center;'>Admin Dashboard</h1>";
 echo "<tr>";
 echo "<td>".$row['booking_id']."</td>";
 echo "<td>".$row['bus_name']."</td>";

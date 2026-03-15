@@ -1,33 +1,24 @@
 <?php
+
 include("db/connect.php");
 
+if($_SERVER["REQUEST_METHOD"] == "POST"){
+
 $bus_id = $_POST['bus_id'];
-$name = $_POST['name'];
-$seat = $_POST['seat'];
+$name = $_POST['passenger_name'];
+$seat = $_POST['seat_number'];
 
-/* Check if seat already booked */
+$sql = "INSERT INTO bookings (bus_id, passenger_name, seat_number)
+VALUES ('$bus_id','$name','$seat')";
+echo "<h2>Booking Successful</h2>";
+echo "<br><br>";
 
-$check = $conn->prepare("SELECT * FROM bookings WHERE bus_id=? AND seat_number=?");
-$check->bind_param("ii",$bus_id,$seat);
-$check->execute();
-$result = $check->get_result();
+echo "<a href='index.php'>Search Another Bus</a>";
 
-if($result->num_rows > 0){
 
-header("Location: index.php?error=seat_taken");
-exit();
 
-}else{
 
-$sql = "INSERT INTO bookings(bus_id,passenger_name,seat_number)
-VALUES(?,?,?)";
-
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("isi",$bus_id,$name,$seat);
-$stmt->execute();
-
-header("Location: index.php?success=1");
-exit();
 
 }
+
 ?>

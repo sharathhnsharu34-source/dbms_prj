@@ -1,33 +1,31 @@
-<?php
-if(isset($_GET['success'])){
-echo "<h3 style='color:green;'>Booking Successful! You can search another bus.</h3>";
-}
-
-if(isset($_GET['error'])){
-echo "<h3 style='color:red;'>Seat already booked for this bus.</h3>";
-}
-?>
 <!DOCTYPE html>
 <html>
 <head>
 <title>Bus Ticket Booking</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-<h2>Search Bus</h2>
+<div class="navbar">
+<h1>🚌 Bus Ticket Booking System</h1>
+</div>
+
+<div class="container">
+
+<h2>Search Buses</h2>
 
 <form action="search_bus.php" method="POST">
 
-From:
-<input type="text" name="source" required>
+<input type="text" name="source" placeholder="From City" required>
 
-To:
-<input type="text" name="destination" required>
+<input type="text" name="destination" placeholder="To City" required>
 
-<button type="submit">Search</button>
+<button type="submit">Search Bus</button>
 
 </form>
+
+</div>
 
 </body>
 </html>
