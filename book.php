@@ -1,58 +1,126 @@
 <?php
+include("db/connect.php");
+
 $bus_id = $_GET['bus_id'];
+
+$bookedSeats = [];
+
+$sql = "SELECT seat_number FROM bookings WHERE bus_id='$bus_id'";
+$result = $conn->query($sql);
+
+while($row = $result->fetch_assoc()){
+$bookedSeats[] = $row['seat_number'];
+}
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-<title>Passenger Details</title>
 
+<title>Passenger Details</title>
 <link rel="stylesheet" href="css/style.css">
 
 <style>
 
-.bus-layout{
-width:420px;
-margin:30px auto;
-background:#f8f8f8;
-padding:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
+body{
+font-family:Arial;
+background:#f4f6f9;
+margin:0;
 }
 
-.row{
-display:flex;
-justify-content:space-between;
-margin:6px 0;
+.navbar{
+background:#34495e;
+color:white;
+text-align:center;
+padding:20px;
+}
+
+.booking-container{
+width:60%;
+margin:30px auto;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:10px 0;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+button{
+background:#27ae60;
+color:white;
+border:none;
+padding:10px 20px;
+border-radius:5px;
+cursor:pointer;
+}
+
+button:hover{
+background:#1e8449;
+}
+
+/* BUS LAYOUT */
+
+.bus-layout{
+width:420px;
+margin:40px auto;
+background:white;
+padding:25px;
+border-radius:12px;
+box-shadow:0 8px 20px rgba(0,0,0,0.15);
+text-align:center;
+}
+
+.bus-front,
+.bus-rear{
+font-weight:bold;
+margin:10px;
+}
+
+.seat-grid{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:12px;
+margin-top:20px;
+}
+
+.aisle{
+visibility:hidden;
 }
 
 .seat{
-width:45px;
-height:40px;
+width:55px;
+height:45px;
 background:#ecf0f1;
-border-radius:6px;
+border-radius:8px;
 display:flex;
 align-items:center;
 justify-content:center;
 cursor:pointer;
 font-weight:bold;
+transition:all 0.25s ease;
+box-shadow:0 3px 6px rgba(0,0,0,0.15);
 }
 
 .seat:hover{
-background:#27ae60;
+transform:translateY(-6px);
+background:#3498db;
 color:white;
 }
 
-.bus-front{
-text-align:center;
-font-weight:bold;
-margin-bottom:10px;
+.selected{
+background:#2ecc71 !important;
+color:white;
+transform:scale(1.1);
 }
 
-.bus-rear{
-text-align:center;
-font-weight:bold;
-margin-top:10px;
+.booked{
+background:#e74c3c;
+color:white;
+cursor:not-allowed;
+box-shadow:none;
 }
 
 </style>
@@ -62,6 +130,14 @@ margin-top:10px;
 function selectSeat(seat){
 
 document.getElementById("seat_number").value = seat;
+
+let seats = document.querySelectorAll(".seat");
+
+seats.forEach(function(s){
+s.classList.remove("selected");
+});
+
+document.getElementById("seat"+seat).classList.add("selected");
 
 }
 
@@ -93,76 +169,34 @@ document.getElementById("seat_number").value = seat;
 
 </div>
 
-<!-- BUS SEAT LAYOUT -->
-
 <div class="bus-layout">
 
-<div class="bus-front">FRONT OF BUS</div>
+<div class="bus-front">🚌 FRONT OF BUS</div>
 
-<div class="row">
-<div class="seat" onclick="selectSeat(1)">01</div>
-<div class="seat" onclick="selectSeat(2)">02</div>
+<div class="seat-grid">
 
-<div class="seat" onclick="selectSeat(3)">03</div>
-<div class="seat" onclick="selectSeat(4)">04</div>
-</div>
+<?php
 
-<div class="row">
-<div class="seat" onclick="selectSeat(5)">05</div>
-<div class="seat" onclick="selectSeat(6)">06</div>
+for($i=1;$i<=32;$i++){
 
-<div class="seat" onclick="selectSeat(7)">07</div>
-<div class="seat" onclick="selectSeat(8)">08</div>
-</div>
+if($i%4==3){
+echo "<div class='aisle'></div>";
+}
 
-<div class="row">
-<div class="seat" onclick="selectSeat(9)">09</div>
-<div class="seat" onclick="selectSeat(10)">10</div>
+if(in_array($i,$bookedSeats)){
 
-<div class="seat" onclick="selectSeat(11)">11</div>
-<div class="seat" onclick="selectSeat(12)">12</div>
-</div>
+echo "<div class='seat booked'>$i</div>";
 
-<div class="row">
-<div class="seat" onclick="selectSeat(13)">13</div>
-<div class="seat" onclick="selectSeat(14)">14</div>
+}else{
 
-<div class="seat" onclick="selectSeat(15)">15</div>
-<div class="seat" onclick="selectSeat(16)">16</div>
-</div>
+echo "<div class='seat' id='seat$i' onclick='selectSeat($i)'>$i</div>";
 
-<div class="row">
-<div class="seat" onclick="selectSeat(17)">17</div>
-<div class="seat" onclick="selectSeat(18)">18</div>
+}
 
-<div class="seat" onclick="selectSeat(19)">19</div>
-<div class="seat" onclick="selectSeat(20)">20</div>
-</div>
+}
 
-<div class="row">
-<div class="seat" onclick="selectSeat(21)">21</div>
-<div class="seat" onclick="selectSeat(22)">22</div>
+?>
 
-<div class="seat" onclick="selectSeat(23)">23</div>
-<div class="seat" onclick="selectSeat(24)">24</div>
-</div>
-
-<div class="row">
-<div class="seat" onclick="selectSeat(25)">25</div>
-<div class="seat" onclick="selectSeat(26)">26</div>
-
-<div class="seat" onclick="selectSeat(27)">27</div>
-<div class="seat" onclick="selectSeat(28)">28</div>
-</div>
-
-<div class="row">
-<div class="seat" onclick="selectSeat(29)">29</div>
-<div class="seat" onclick="selectSeat(30)">30</div>
-</div>
-
-<div class="row">
-<div class="seat" onclick="selectSeat(31)">31</div>
-<div class="seat" onclick="selectSeat(32)">32</div>
 </div>
 
 <div class="bus-rear">REAR OF BUS</div>
