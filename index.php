@@ -1,3 +1,6 @@
+<?php 
+session_start(); 
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,11 +44,22 @@
                 <i class="fa-solid fa-bus text-primary"></i> Voyage
             </a>
             <div class="hidden md:flex space-x-8 items-center font-medium">
-                <a href="#" class="nav-link">Home</a>
+                <a href="index.php" class="nav-link">Home</a>
                 <a href="#about" class="nav-link">About</a>
                 <a href="#testimonials" class="nav-link">Reviews</a>
-                <a href="#" class="nav-link">Login</a>
-                <a href="#" class="bg-primary hover:bg-red-600 text-white px-6 py-2 rounded-full transition-transform transform hover:scale-105 shadow-md">Contact Us</a>
+                
+                <?php if(isset($_SESSION['user_id'])): ?>
+                    <a href="my_tickets.php" class="nav-link"><i class="fa-solid fa-ticket text-primary mr-1"></i> My Tickets</a>
+                    <div class="relative group cursor-pointer h-full flex items-center">
+                        <span class="nav-link font-bold text-primary">Welcome, <?php echo htmlspecialchars(explode(' ', $_SESSION['user_name'])[0]); ?></span>
+                        <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden group-hover:block border border-gray-100">
+                            <a href="logout.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-red-600 transition font-medium"><i class="fa-solid fa-right-from-bracket mr-2"></i> Logout</a>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <a href="login.php" class="nav-link">Login</a>
+                    <a href="signup.php" class="bg-primary hover:bg-red-600 text-white px-6 py-2 rounded-full transition-transform transform hover:scale-105 shadow-md">Sign Up</a>
+                <?php endif; ?>
             </div>
             <div class="md:hidden">
                 <button class="mobile-menu-btn text-2xl focus:outline-none transition-colors"><i class="fa-solid fa-bars"></i></button>
