@@ -319,7 +319,7 @@ while($row = $result->fetch_assoc()){
                     </div>
 
                     <!-- Booking Form -->
-                    <form action="confirm_booking.php" method="POST" id="bookingForm" class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <form action="confirm_booking.php" method="POST" id="bookingForm" class="bg-slate-50 p-6 rounded-2xl border border-slate-100" onsubmit="return validateBookingForm()">
                         <input type="hidden" name="bus_id" value="<?php echo htmlspecialchars($bus_id); ?>">
                         <input type="hidden" id="seat_number" name="seat_number" required>
                         <input type="hidden" name="src" value="<?php echo htmlspecialchars($src); ?>">
@@ -330,15 +330,35 @@ while($row = $result->fetch_assoc()){
                         <input type="hidden" name="arr" value="<?php echo htmlspecialchars($arr); ?>">
                         <input type="hidden" name="type" value="<?php echo htmlspecialchars($type); ?>">
                         
-                        <div class="mb-6">
-                            <label class="block text-[0.7rem] font-bold text-slate-500 mb-2 uppercase tracking-widest">Primary Passenger Name</label>
-                            <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                                    <i class="fa-solid fa-user"></i>
+                        <!-- Primary Contact Information -->
+                        <div class="mb-6 border-b border-slate-200 pb-5">
+                            <h4 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide"><i class="fa-solid fa-address-book text-red-500 mr-2"></i>Primary Contact</h4>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-[0.7rem] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Email Address <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><i class="fa-solid fa-envelope"></i></div>
+                                        <input type="email" id="primary_email" name="primary_email" required placeholder="Enter email address" 
+                                            value="<?php echo isset($_SESSION['email']) ? htmlspecialchars($_SESSION['email']) : ''; ?>"
+                                            class="w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all font-semibold text-slate-800 bg-white placeholder-slate-300">
+                                    </div>
                                 </div>
-                                <input type="text" name="passenger_name" required placeholder="Enter full name" 
-                                    class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all font-semibold text-slate-800 bg-white placeholder-slate-300">
+                                <div>
+                                    <label class="block text-[0.7rem] font-bold text-slate-500 mb-1.5 uppercase tracking-widest">Mobile Number <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><i class="fa-solid fa-phone"></i></div>
+                                        <input type="tel" id="primary_phone" name="primary_phone" required placeholder="10-digit mobile number" pattern="[0-9]{10}"
+                                            value="<?php echo isset($_SESSION['phone']) ? htmlspecialchars($_SESSION['phone']) : ''; ?>"
+                                            class="w-full pl-10 pr-3 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 transition-all font-semibold text-slate-800 bg-white placeholder-slate-300">
+                                    </div>
+                                </div>
                             </div>
+                        </div>
+
+                        <!-- Dynamic Passenger Forms Container -->
+                        <div id="passengers-container" class="mb-6 space-y-4 empty:hidden">
+                            <!-- Passenger cards will be injected here by JS -->
                         </div>
                         
                         <button type="button" id="submitBtn" onclick="submitBooking()" disabled 
@@ -356,26 +376,26 @@ while($row = $result->fetch_assoc()){
 
     <!-- Interactive Script -->
     <script>
-        let selectedSeat = null;
+        let selectedSeats = [];
+        
+        // Pass session data to JS for auto-filling the first passenger
+        const loggedInUser = {
+            name: "<?php echo isset($_SESSION['user_name']) ? addslashes(explode(' ', $_SESSION['user_name'])[0]) : (isset($_SESSION['name']) ? addslashes($_SESSION['name']) : ''); ?>",
+            email: "<?php echo isset($_SESSION['email']) ? addslashes($_SESSION['email']) : ''; ?>",
+            phone: "<?php echo isset($_SESSION['phone']) ? addslashes($_SESSION['phone']) : ''; ?>"
+        };
         
         function toggleSeat(seatNum, price) {
             const seatEl = document.getElementById('seat_' + seatNum);
             
-            // If clicking the already selected seat, deselect it
             if (seatEl.classList.contains('selected')) {
                 seatEl.classList.remove('selected');
-                selectedSeat = null;
+                selectedSeats = selectedSeats.filter(s => s !== String(seatNum) && s !== seatNum);
             } else {
-                // Deselect previously selected seat visually
-                const allSelected = document.querySelectorAll('.seat.selected');
-                allSelected.forEach(el => el.classList.remove('selected'));
-                
-                // Select new seat
                 seatEl.classList.add('selected');
-                selectedSeat = seatNum;
+                selectedSeats.push(seatNum);
             }
             
-            // Update the UI Panel
             updateSummary(price);
         }
         
@@ -386,19 +406,20 @@ while($row = $result->fetch_assoc()){
             const submitBtn = document.getElementById('submitBtn');
             const summaryPanel = document.getElementById('summary-panel');
             
-            if (selectedSeat !== null) {
-                // Visual bounce effect on total
+            if (selectedSeats.length > 0) {
                 totalDisplay.classList.remove('pulse-once');
                 void totalDisplay.offsetWidth; // trigger reflow
                 totalDisplay.classList.add('pulse-once');
                 
-                seatsDisplay.innerHTML = `<span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md border border-emerald-200 text-sm">${selectedSeat}</span> <span class="bg-slate-200 text-slate-600 px-2 py-1 rounded-md text-xs ml-1">x1</span>`;
-                totalDisplay.innerText = '₹' + pricePerSeat;
+                const badges = selectedSeats.map(s => `<span class="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md border border-emerald-200 text-sm truncate inline-block max-w-[60px] text-center mb-1 mr-1 shadow-sm">${s}</span>`).join('');
+                seatsDisplay.innerHTML = `<div class="flex flex-wrap justify-end items-center">${badges} <span class="text-slate-500 text-xs ml-1 font-semibold uppercase tracking-wider">(${selectedSeats.length} seats)</span></div>`;
                 
-                // Set hidden input value
-                inputField.value = selectedSeat;
+                const totalPrice = pricePerSeat * selectedSeats.length;
+                totalDisplay.innerText = '₹' + totalPrice;
                 
-                // Enable button
+                // Set hidden input value as comma-separated
+                inputField.value = selectedSeats.join(',');
+                
                 submitBtn.disabled = false;
                 summaryPanel.classList.add('shadow-2xl');
                 summaryPanel.classList.remove('shadow-sm');
@@ -408,18 +429,108 @@ while($row = $result->fetch_assoc()){
                 totalDisplay.innerText = '₹0';
                 inputField.value = '';
                 
-                // Disable button
                 submitBtn.disabled = true;
                 summaryPanel.classList.remove('shadow-2xl');
                 summaryPanel.classList.add('shadow-sm');
             }
+            
+            generatePassengerForms();
+        }
+
+        function generatePassengerForms() {
+            const container = document.getElementById('passengers-container');
+            container.innerHTML = '';
+            
+            if (selectedSeats.length === 0) return;
+            
+            let html = `<h4 class="text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide border-b border-slate-200 pb-2"><i class="fa-solid fa-users text-red-500 mr-2"></i>Passenger Details</h4>`;
+            
+            selectedSeats.forEach((seat, index) => {
+                const isFirst = index === 0;
+                const autoName = isFirst && loggedInUser.name ? loggedInUser.name : '';
+                
+                html += `
+                <div class="bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-200 relative overflow-hidden transition-all hover:border-slate-300">
+                    <div class="absolute top-0 right-0 bg-slate-100 text-slate-500 text-[0.65rem] font-bold px-3 py-1 rounded-bl-lg border-b border-l border-slate-200 uppercase tracking-widest shadow-sm">
+                        Seat ${seat}
+                    </div>
+                    
+                    <h5 class="text-xs font-bold text-slate-800 mb-4 flex items-center gap-2"><div class="w-5 h-5 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-[0.65rem]">${index + 1}</div> Passenger</h5>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-[0.65rem] font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="passenger_names[]" required placeholder="Full Name" value="${autoName}"
+                                class="w-full px-3 py-2.5 text-sm font-medium rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-red-500/50 bg-slate-50 focus:bg-white text-slate-800 transition-all placeholder-slate-300">
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="w-1/2">
+                                <label class="block text-[0.65rem] font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Age <span class="text-red-500">*</span></label>
+                                <input type="number" name="passenger_ages[]" required min="1" max="100" placeholder="Age"
+                                    class="w-full px-3 py-2.5 text-sm font-medium rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-red-500/50 bg-slate-50 focus:bg-white text-slate-800 transition-all placeholder-slate-300">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="block text-[0.65rem] font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Gender <span class="text-red-500">*</span></label>
+                                <select name="passenger_genders[]" required class="w-full px-2 py-2.5 text-sm font-medium rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-red-500/50 bg-slate-50 focus:bg-white text-slate-800 transition-all cursor-pointer">
+                                    <option value="" disabled selected>Select</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[0.65rem] font-bold text-slate-500 mb-1.5 uppercase tracking-wide">ID Type <span class="text-red-500">*</span></label>
+                            <select name="passenger_id_types[]" required class="w-full px-2 py-2.5 text-sm font-medium rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-red-500/50 bg-slate-50 focus:bg-white text-slate-800 transition-all cursor-pointer">
+                                <option value="" disabled selected>Select ID Proof</option>
+                                <option value="Aadhar">Aadhar Card</option>
+                                <option value="PAN">PAN Card</option>
+                                <option value="DL">Driving License</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[0.65rem] font-bold text-slate-500 mb-1.5 uppercase tracking-wide">ID Number <span class="text-red-500">*</span></label>
+                            <input type="text" name="passenger_id_numbers[]" required placeholder="Enter ID Proof Number"
+                                class="w-full px-3 py-2.5 text-sm font-medium rounded-lg border border-slate-200 focus:outline-none focus:ring-1 focus:ring-red-500/50 bg-slate-50 focus:bg-white text-slate-800 transition-all placeholder-slate-300">
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function validateBookingForm() {
+            const priPhone = document.getElementById('primary_phone').value;
+            if (priPhone && !/^\d{10}$/.test(priPhone)) {
+                alert("Primary phone must be exactly 10 digits.");
+                return false;
+            }
+            return true;
         }
 
         function submitBooking() {
-            if(selectedSeat !== null) {
+            if(selectedSeats.length > 0) {
+                if(!validateBookingForm()) return;
+                
+                // Form validity check API
+                if(!document.getElementById('bookingForm').checkValidity()) {
+                    document.getElementById('bookingForm').reportValidity();
+                    return;
+                }
+                
                 const btn = document.getElementById('submitBtn');
-                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span>PROCESSING...</span>';
-                document.getElementById('bookingForm').submit();
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> <span class="ml-2">PROCESSING...</span>';
+                btn.disabled = true;
+                
+                // Slight delay to allow UI to render spinner
+                setTimeout(() => {
+                    document.getElementById('bookingForm').submit();
+                }, 100);
             }
         }
     </script>

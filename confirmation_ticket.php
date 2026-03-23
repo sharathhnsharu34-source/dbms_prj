@@ -139,7 +139,7 @@ $journey_date = date('d M Y');
 
             <!-- Ticket Bottom half -->
             <div class="p-8 pt-7 bg-white">
-                <div class="grid grid-cols-2 gap-y-7 gap-x-4 mb-7">
+                <div class="grid grid-cols-2 gap-y-7 gap-x-4 mb-5">
                     <div>
                         <p class="text-[0.65rem] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Passenger</p>
                         <p class="font-bold text-slate-800 text-lg tracking-tight truncate"><?php echo htmlspecialchars($passenger_name); ?></p>
@@ -158,6 +158,21 @@ $journey_date = date('d M Y');
                     <div>
                         <p class="text-[0.65rem] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Total Passengers</p>
                         <p class="font-bold text-slate-800 text-lg tracking-tight"><?php echo $num_seats; ?> Person(s)</p>
+                    </div>
+                </div>
+
+                <!-- Primary Contact Info -->
+                <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100 mb-7">
+                    <p class="text-[0.65rem] text-slate-400 font-bold uppercase tracking-widest mb-2 border-b border-slate-100 pb-1.5"><i class="fa-solid fa-address-book mr-1.5 text-slate-300"></i>Primary Contact</p>
+                    <div class="flex justify-between items-center text-sm">
+                        <div class="w-1/2 pr-2">
+                            <p class="text-xs text-slate-500 mb-0.5">Email ID</p>
+                            <p class="font-semibold text-slate-700 truncate"><?php echo isset($_POST['primary_email']) && !empty($_POST['primary_email']) ? htmlspecialchars($_POST['primary_email']) : 'N/A'; ?></p>
+                        </div>
+                        <div class="w-1/2 pl-2 border-l border-slate-200">
+                            <p class="text-xs text-slate-500 mb-0.5">Mobile No</p>
+                            <p class="font-semibold text-slate-700"><?php echo isset($_POST['primary_phone']) && !empty($_POST['primary_phone']) ? htmlspecialchars($_POST['primary_phone']) : 'N/A'; ?></p>
+                        </div>
                     </div>
                 </div>
 
