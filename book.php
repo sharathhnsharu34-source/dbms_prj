@@ -1,5 +1,9 @@
 <?php
 session_start();
+if(!isset($_SESSION['user_id'])) {
+    echo "<script>alert('Please login or signup to search and book buses'); window.location.href='login.php';</script>";
+    exit();
+}
 include("db/connect.php");
 
 $bus_id = $_GET['bus_id'];

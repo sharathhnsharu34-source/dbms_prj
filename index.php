@@ -90,14 +90,15 @@ session_start();
                         <i class="fa-solid fa-calendar-days text-gray-400 mr-3 text-lg w-5 text-center"></i>
                         <input type="text" placeholder="Date of Journey" onfocus="(this.type='date')" onblur="(this.type='text')" class="w-full outline-none text-gray-700 bg-transparent placeholder-gray-400 font-medium text-base cursor-pointer">
                     </div>
-                    <div class="hidden md:block w-px h-10 bg-gray-300 z-20"></div>
-                    <div class="input-group flex-1 w-full bg-white rounded-xl md:rounded-none flex items-center px-4 py-3 md:py-3 border border-gray-200 md:border-l-0 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary md:border-r-0 relative z-10">
-                        <i class="fa-solid fa-calendar-plus text-gray-400 mr-3 text-lg w-5 text-center"></i>
-                        <input type="text" placeholder="Return Date" onfocus="(this.type='date')" onblur="(this.type='text')" class="w-full outline-none text-gray-700 bg-transparent placeholder-gray-400 font-medium text-base cursor-pointer">
-                    </div>
+                    <?php if(!isset($_SESSION['user_id'])): ?>
+                    <button type="button" onclick="alert('Please login or signup to search and book buses'); window.location.href='login.php';" class="w-full md:w-auto bg-primary hover:bg-red-600 text-white font-semibold py-4 md:py-4 px-8 rounded-xl md:rounded-r-full md:rounded-l-none transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap shadow-md focus:outline-none focus:ring-4 focus:ring-red-300 z-10 md:-ml-1 m-0">
+                        Search Buses <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                    <?php else: ?>
                     <button type="submit" class="w-full md:w-auto bg-primary hover:bg-red-600 text-white font-semibold py-4 md:py-4 px-8 rounded-xl md:rounded-r-full md:rounded-l-none transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap shadow-md focus:outline-none focus:ring-4 focus:ring-red-300 z-10 md:-ml-1 m-0">
                         Search Buses <i class="fa-solid fa-arrow-right ml-1"></i>
                     </button>
+                    <?php endif; ?>
                 </form>
             </div>
         </div>
