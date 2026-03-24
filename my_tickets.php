@@ -306,7 +306,7 @@ $result = $conn->query($sql);
                 <div class="w-14 h-14 bg-white rounded shadow-sm border border-slate-200 flex items-center justify-center p-1">
                     <i class="fa-solid fa-qrcode text-3xl text-slate-800"></i>
                 </div>
-                <button onclick="window.print()" class="px-5 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold rounded-xl shadow-md transition-all text-sm tracking-wide flex items-center gap-2 transform hover:-translate-y-0.5">
+                <button onclick="downloadTicket()" class="px-5 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-bold rounded-xl shadow-md transition-all text-sm tracking-wide flex items-center gap-2 transform hover:-translate-y-0.5">
                     <i class="fa-solid fa-download"></i> Download
                 </button>
             </div>
@@ -370,6 +370,13 @@ $result = $conn->query($sql);
                 modal.classList.remove('closing');
                 document.body.style.overflow = 'auto';
             }, 300);
+        }
+        
+        function downloadTicket() {
+            let rawBid = document.getElementById('m_bid').innerText;
+            // e.g., "BUS-00123" -> "123"
+            let numericBid = parseInt(rawBid.replace('BUS-', ''), 10);
+            window.open('download_ticket.php?id=' + numericBid, '_blank');
         }
     </script>
 </body>
