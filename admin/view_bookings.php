@@ -5,15 +5,15 @@ include("../db/connect.php");
 // Fetch statistics for summary
 $stats_query = "
 SELECT 
-    COUNT(DISTINCT buses.bus_id) AS total_buses, 
-    COUNT(bookings.booking_id) AS total_bookings 
-FROM buses 
-LEFT JOIN bookings ON buses.bus_id = bookings.bus_id
+    (SELECT COUNT(DISTINCT bus_id) FROM buses) AS total_buses, 
+    (SELECT COUNT(booking_id) FROM bookings WHERE payment_status = 'Success' AND booking_status = 'Active') AS total_bookings,
+    (SELECT SUM(final_price) FROM bookings WHERE payment_status = 'Success' AND booking_status = 'Active') AS total_revenue
 ";
 $stats_result = $conn->query($stats_query);
 $stats = $stats_result->fetch_assoc();
 $total_buses = $stats['total_buses'] ?? 0;
 $total_bookings = $stats['total_bookings'] ?? 0;
+$total_revenue = $stats['total_revenue'] ?? 0;
 
 // Fetch unique buses that have bookings, along with details
 $bus_query = "
@@ -100,10 +100,23 @@ if ($bus_result) {
                         <span class="text-[0.65rem] uppercase tracking-wider text-slate-500 font-semibold block mt-0.5">Booking Management System</span>
                     </div>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-1 md:gap-3 flex-wrap pb-2 md:pb-0 justify-end mt-4 md:mt-0">
+                    <a href="view_bookings.php" class="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm">
+                        <i class="fa-solid fa-chart-pie text-xs"></i> 
+                        <span class="hidden lg:inline">Dashboard</span>
+                    </a>
+                    <a href="manage_buses.php" class="flex items-center justify-center gap-2 bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm">
+                        <i class="fa-solid fa-bus text-xs"></i> 
+                        <span class="hidden lg:inline">Buses</span>
+                    </a>
+                    <a href="manage_routes.php" class="flex items-center justify-center gap-2 bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm">
+                        <i class="fa-solid fa-route text-xs"></i> 
+                        <span class="hidden lg:inline">Routes</span>
+                    </a>
+                    <div class="w-px h-6 bg-slate-200 hidden md:block mx-1"></div>
                     <a href="../index.php" class="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md transform hover:-translate-y-0.5">
                         <i class="fa-solid fa-arrow-left text-xs"></i> 
-                        <span class="hidden sm:inline">Back to Main</span>
+                        <span class="hidden sm:inline">Main</span>
                     </a>
                 </div>
             </div>
@@ -133,13 +146,23 @@ if ($bus_result) {
                         <i class="fa-solid fa-bus-simple text-2xl"></i>
                     </div>
                     <div>
-                        <p class="text-[0.8rem] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Buses</p>
+                        <p class="text-[0.8rem] font-bold text-slate-400 uppercase tracking-wider mb-1">Active Buses</p>
                         <h3 class="text-2xl font-extrabold text-slate-800 leading-none"><?= $total_buses ?></h3>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-[1rem] p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex items-center gap-4 card-hover">
                     <div class="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0 shadow-inner">
+                        <i class="fa-solid fa-indian-rupee-sign text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-[0.8rem] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Revenue</p>
+                        <h3 class="text-2xl font-extrabold text-slate-800 leading-none">₹<?= number_format($total_revenue) ?></h3>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-[1rem] p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex items-center gap-4 card-hover">
+                    <div class="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0 shadow-inner">
                         <i class="fa-solid fa-ticket-simple text-2xl"></i>
                     </div>
                     <div>
@@ -147,29 +170,16 @@ if ($bus_result) {
                         <h3 class="text-2xl font-extrabold text-slate-800 leading-none"><?= $total_bookings ?></h3>
                     </div>
                 </div>
-                
-                <div class="bg-white rounded-[1rem] p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex items-center gap-4 card-hover">
-                    <div class="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 shrink-0 shadow-inner">
-                        <i class="fa-solid fa-users text-2xl"></i>
-                    </div>
-                    <div>
-                        <p class="text-[0.8rem] font-bold text-slate-400 uppercase tracking-wider mb-1">Avg Occupancy</p>
-                        <!-- Assuming average 40 seats -->
-                        <h3 class="text-2xl font-extrabold text-slate-800 leading-none">
-                            <?= ($total_buses > 0) ? round(($total_bookings / ($total_buses * 40)) * 100) : 0 ?>%
-                        </h3>
-                    </div>
-                </div>
 
                 <div class="bg-white rounded-[1rem] p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 flex items-center gap-4 card-hover relative overflow-hidden">
                     <div class="absolute right-0 top-0 bottom-0 w-2 bg-gradient-to-b from-amber-400 to-orange-500"></div>
                     <div class="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500 shrink-0 shadow-inner">
-                        <i class="fa-solid fa-bolt text-2xl"></i>
+                        <i class="fa-solid fa-chart-pie text-2xl"></i>
                     </div>
-                    <div>
-                        <p class="text-[0.8rem] font-bold text-slate-400 uppercase tracking-wider mb-1">System Status</p>
-                        <div class="flex items-center gap-2 text-sm font-bold text-slate-800">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                    <div class="w-full">
+                        <p class="text-[0.8rem] font-bold text-slate-400 uppercase tracking-wider mb-1 flex justify-between">Occupancy <span class="text-amber-500"><?= ($total_buses > 0) ? round(($total_bookings / ($total_buses * 40)) * 100) : 0 ?>%</span></p>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 mt-2">
+                            <div class="bg-amber-500 h-1.5 rounded-full" style="width: <?= ($total_buses > 0) ? min(100, round(($total_bookings / ($total_buses * 40)) * 100)) : 0 ?>%"></div>
                         </div>
                     </div>
                 </div>

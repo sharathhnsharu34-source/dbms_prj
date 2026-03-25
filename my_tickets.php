@@ -15,7 +15,7 @@ $user_id = $_SESSION['user_id'];
 $user_name = explode(' ', $_SESSION['user_name'])[0];
 
 // Fetch all tickets for this user using JOIN to get bus details
-$sql = "SELECT b.booking_id, b.seat_number, b.passenger_name, b.final_price, bu.bus_name, bu.source, bu.destination, bu.departure_time, bu.arrival_time, bu.price, bu.journey_date, bu.bus_type 
+$sql = "SELECT b.booking_id, b.seat_number, b.passenger_name, b.final_price, b.booking_status, b.refund_amount, b.cancelled_at, bu.bus_name, bu.source, bu.destination, bu.departure_time, bu.arrival_time, bu.price, bu.journey_date, bu.bus_type 
         FROM bookings b 
         JOIN buses bu ON b.bus_id = bu.bus_id 
         WHERE b.user_id = '$user_id' AND b.payment_status = 'Success'
@@ -99,7 +99,7 @@ $result = $conn->query($sql);
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 fade-in">
         
         <div class="flex items-center gap-3 mb-8 pb-4 border-b border-gray-200">
-            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-500 text-xl shadow-sm">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-1 text-red-500 text-xl shadow-sm">
                 <i class="fa-solid fa-ticket-simple"></i>
             </div>
             <div>
@@ -112,15 +112,22 @@ $result = $conn->query($sql);
             <?php
             if($result && $result->num_rows > 0) {
                 $count = 0;
-                while($row = $result->fetch_assoc()) {
-                    $seats_array = array_filter(array_map('trim', explode(',', $row['seat_number'])));
+                while($ticket = $result->fetch_assoc()) {
+                    $seats_array = array_filter(array_map('trim', explode(',', $ticket['seat_number'])));
                     $num_seats = count($seats_array);
-                    $total_amount = $num_seats * $row['price'];
-                    $b_id_display = "BUS-" . str_pad($row['booking_id'], 5, "0", STR_PAD_LEFT);
+                    $base_fare = $num_seats * $ticket['price'];
+                    $total_fare = isset($ticket['final_price']) && $ticket['final_price'] !== null ? floatval($ticket['final_price']) : $base_fare;
+
+                    $departure_str = $ticket['journey_date'] . ' ' . $ticket['departure_time'];
+                    $departure_time = strtotime($departure_str);
+                    if (!$departure_time) $departure_time = strtotime($ticket['journey_date']);
+                    $is_future = ($departure_time - time()) > 0;
+                    
+                    $b_id_display = "BUS-" . str_pad($ticket['booking_id'], 5, "0", STR_PAD_LEFT);
                     
                     // Calculate Duration
-                    $dep_time = new DateTime($row['departure_time']);
-                    $arr_time = new DateTime($row['arrival_time']);
+                    $dep_time = new DateTime($ticket['departure_time']);
+                    $arr_time = new DateTime($ticket['arrival_time']);
                     if ($arr_time < $dep_time) {
                         // Crosses midnight
                         $arr_time->modify('+1 day');
@@ -128,11 +135,11 @@ $result = $conn->query($sql);
                     $interval = $dep_time->diff($arr_time);
                     $duration = $interval->h . 'h ' . $interval->i . 'm';
                     
-                    $j_date = date('d M Y', strtotime($row['journey_date'] ?? date('Y-m-d')));
-                    $bus_type = $row['bus_type'] ?? 'A/C Sleeper';
+                    $j_date = date('d M Y', strtotime($ticket['journey_date'] ?? date('Y-m-d')));
+                    $bus_type = $ticket['bus_type'] ?? 'A/C Sleeper';
                     
                     // Fetch passenger names dynamically
-                    $b_id_current = $row['booking_id'];
+                    $b_id_current = $ticket['booking_id'];
                     $pass_sql = "SELECT name FROM passengers WHERE booking_id = '$b_id_current'";
                     $pass_res = $conn->query($pass_sql);
                     $pass_names = [];
@@ -141,22 +148,39 @@ $result = $conn->query($sql);
                             $pass_names[] = trim($pr['name']);
                         }
                     } else {
-                        $pass_names[] = trim($row['passenger_name'] ?? 'Passenger');
+                        $pass_names[] = trim($ticket['passenger_name'] ?? 'Passenger');
                     }
                     $pass_names_json = htmlspecialchars(json_encode($pass_names), ENT_QUOTES, 'UTF-8');
                     
                     echo '
-                    <div class="ticket-card bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden" 
-                         onclick="openModal(\''.addslashes($b_id_display).'\', '.$pass_names_json.', \''.addslashes($row['source']).'\', \''.addslashes($row['destination']).'\', \''.addslashes($j_date).'\', \''.addslashes($row['departure_time']).'\', \''.addslashes($row['arrival_time']).'\', \''.addslashes($row['bus_name']).'\', \''.addslashes($bus_type).'\', \''.addslashes($row['seat_number']).'\', \''.addslashes($total_amount).'\')">
+                    <div class="ticket-card bg-white rounded-2xl shadow-sm border border-gray-100/80 overflow-hidden">
                         <!-- Top Header -->
                         <div class="p-5 pb-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex justify-between items-center relative">
                             <div class="absolute right-0 top-0 w-24 h-24 bg-white/5 rounded-bl-[100px]"></div>
                             <div>
-                                <h3 class="font-bold text-lg truncate relative z-10">'.$row['bus_name'].'</h3>
+                                <h3 class="font-bold text-lg truncate relative z-10">'.$ticket['bus_name'].'</h3>
                                 <p class="text-[0.65rem] text-emerald-400 font-bold uppercase tracking-widest relative z-10"><i class="fa-solid fa-circle-check"></i> Confirmed</p>
                             </div>
-                            <div class="text-right flex flex-col items-end relative z-10">
-                                <span class="bg-white/20 px-2 py-0.5 rounded text-[0.65rem] uppercase tracking-wider mb-1 font-semibold">ID: '.$b_id_display.'</span>
+                            <div class="text-right flex flex-col items-end">
+                                ';
+                                if($ticket['booking_status'] === 'Cancelled'):
+                                echo '
+                                <div class="bg-red-100/50 text-red-600 border border-red-200/50 px-2 py-0.5 rounded flex items-center gap-1 overflow-hidden relative group">
+                                    <i class="fa-solid fa-circle-xmark text-[0.6rem]"></i>
+                                    <span class="text-[0.65rem] font-bold uppercase tracking-widest">Cancelled</span>
+                                </div>
+                                ';
+                                else:
+                                echo '
+                                <div class="bg-emerald-100/50 text-emerald-600 border border-emerald-200/50 px-2 py-0.5 rounded flex items-center gap-1 overflow-hidden relative group">
+                                    <span class="absolute inset-0 bg-emerald-400 opacity-20 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out"></span>
+                                    <i class="fa-solid fa-circle-check text-[0.6rem]"></i>
+                                    <span class="text-[0.65rem] font-bold uppercase tracking-widest">Confirmed</span>
+                                </div>
+                                ';
+                                endif;
+                                echo '
+                                <span class="text-[#0f172a] font-mono font-black tracking-wide text-xs mt-1.5">'.$b_id_display.'</span>
                             </div>
                         </div>
                         
@@ -164,15 +188,15 @@ $result = $conn->query($sql);
                         <div class="p-6">
                             <div class="flex justify-between items-center mb-5">
                                 <div class="w-[45%]">
-                                    <p class="text-xl font-bold text-slate-800 tracking-tight">'.date('h:i A', strtotime($row['departure_time'])).'</p>
-                                    <p class="text-[0.75rem] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">'.$row['source'].'</p>
+                                    <p class="text-xl font-bold text-slate-800 tracking-tight">'.date('h:i A', strtotime($ticket['departure_time'])).'</p>
+                                    <p class="text-[0.75rem] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">'.$ticket['source'].'</p>
                                 </div>
                                 <div class="w-[10%] flex justify-center text-slate-300">
                                     <i class="fa-solid fa-arrow-right"></i>
                                 </div>
                                 <div class="w-[45%] text-right">
-                                    <p class="text-xl font-bold text-slate-800 tracking-tight">'.date('h:i A', strtotime($row['arrival_time'])).'</p>
-                                    <p class="text-[0.75rem] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">'.$row['destination'].'</p>
+                                    <p class="text-xl font-bold text-slate-800 tracking-tight">'.date('h:i A', strtotime($ticket['arrival_time'])).'</p>
+                                    <p class="text-[0.75rem] font-bold text-slate-400 uppercase tracking-widest mt-1 truncate">'.$ticket['destination'].'</p>
                                 </div>
                             </div>
                             
@@ -199,11 +223,48 @@ $result = $conn->query($sql);
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <p class="text-[0.65rem] text-slate-400 font-bold uppercase tracking-widest mb-1">Seats ('.$num_seats.')</p>
-                                    <p class="font-bold text-emerald-600 text-sm truncate">'.$row['seat_number'].'</p>
+                                    <p class="font-bold text-emerald-600 text-sm truncate">'.$ticket['seat_number'].'</p>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-[0.65rem] text-slate-400 font-bold uppercase tracking-widest mb-1">Total Paid</p>
-                                    <p class="font-bold text-rose-500 text-lg leading-none">₹'.$total_amount.'</p>
+                                    <p class="font-bold text-rose-500 text-lg leading-none">₹'.$total_fare.'</p>
+                                </div>
+                            </div>
+                            <!-- Action Buttons -->
+                            <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center relative z-20">
+                                <button onclick="openModal(\''.addslashes($ticket['booking_id']).'\', '.$pass_names_json.', \''.addslashes($ticket['source']).'\', \''.addslashes($ticket['destination']).'\', \''.addslashes($j_date).'\', \''.addslashes($ticket['departure_time']).'\', \''.addslashes($ticket['arrival_time']).'\', \''.addslashes($ticket['bus_name']).'\', \''.addslashes($bus_type).'\', \''.addslashes($ticket['seat_number']).'\', \''.addslashes($total_fare).'\', \''.addslashes($ticket['booking_status']).'\')" class="text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors uppercase tracking-widest flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-emerald-50 border border-transparent hover:border-emerald-100">
+                                    <i class="fa-solid fa-eye text-emerald-500/70"></i> View Details
+                                </button>
+                                
+                                <div class="flex items-center gap-2">
+                                    ';
+                                    if($ticket['booking_status'] === 'Cancelled'):
+                                    echo '
+                                        <div class="text-[0.55rem] font-black text-slate-500 bg-slate-100 border border-slate-200 uppercase tracking-widest px-2 py-1.5 rounded-xl flex items-center justify-center flex-col leading-tight cursor-default">
+                                            <span>Cancelled ❌</span>
+                                            <span class="text-emerald-600 mt-0.5">Refund: ₹'.htmlspecialchars($ticket['refund_amount']).'</span>
+                                        </div>
+                                    ';
+                                    else:
+                                    echo '
+                                        ';
+                                        if($is_future):
+                                        echo '
+                                            <form action="cancel_ticket.php" method="POST" class="m-0 p-0" onsubmit="return confirm(\'Are you sure you want to cancel this ticket? Current refund policy applies.\');">
+                                                <input type="hidden" name="booking_id" value="'.$ticket['booking_id'].'">
+                                                <button type="submit" class="text-[0.65rem] font-black text-slate-500 hover:text-white bg-slate-50 hover:bg-slate-700 transition-all border border-slate-200 uppercase tracking-widest px-3 py-2 rounded-xl shadow-sm hover:shadow-md flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-ban"></i> Cancel
+                                                </button>
+                                            </form>
+                                        ';
+                                        endif;
+                                        echo '
+                                        <a href="download_ticket.php?id='.$ticket['booking_id'].'" class="text-[0.65rem] font-black text-rose-500 hover:text-white bg-rose-50 hover:bg-rose-500 transition-all border border-rose-100 uppercase tracking-widest px-4 py-2 rounded-xl shadow-sm hover:shadow-md flex items-center gap-1.5 relative z-20">
+                                            <i class="fa-solid fa-download"></i> e-Ticket
+                                        </a>
+                                    ';
+                                    endif;
+                                    echo '
                                 </div>
                             </div>
                         </div>
@@ -240,7 +301,7 @@ $result = $conn->query($sql);
                 </div>
                 <h3 class="text-2xl font-black tracking-widest uppercase mb-1 drop-shadow-md" id="m_bus_name">Volvo Express</h3>
                 <p class="text-[0.65rem] font-bold text-slate-300 uppercase tracking-widest" id="m_bus_type">A/C Sleeper</p>
-                <div class="mt-4 inline-block bg-emerald-500 text-white px-3 py-1 rounded-full text-[0.65rem] font-black uppercase tracking-widest shadow-md">
+                <div id="m_status_badge" class="mt-4 inline-block bg-emerald-500 text-white px-3 py-1 rounded-full text-[0.65rem] font-black uppercase tracking-widest shadow-md">
                     <i class="fa-solid fa-circle-check mr-1"></i> Booking Confirmed
                 </div>
             </div>
@@ -317,7 +378,7 @@ $result = $conn->query($sql);
     </div>
 
     <script>
-        function openModal(bid, pass_arr, src, dest, date, dep, arr, bus, type, seats, total) {
+        function openModal(bid, pass_arr, src, dest, date, dep, arr, bus, type, seats, total, status) {
             document.getElementById('m_bid').innerText = bid;
             
             let passHtml = '';
@@ -353,6 +414,16 @@ $result = $conn->query($sql);
             document.getElementById('m_bus_type').innerText = type;
             document.getElementById('m_seats').innerText = seats;
             document.getElementById('m_total').innerText = '₹' + total;
+            
+            let statusBadge = document.getElementById('m_status_badge');
+            if (status === 'Cancelled') {
+                statusBadge.className = 'mt-4 inline-block bg-red-500 text-white px-3 py-1 rounded-full text-[0.65rem] font-black uppercase tracking-widest shadow-md';
+                statusBadge.innerHTML = '<i class="fa-solid fa-circle-xmark mr-1"></i> Booking Cancelled';
+            } else {
+                statusBadge.className = 'mt-4 inline-block bg-emerald-500 text-white px-3 py-1 rounded-full text-[0.65rem] font-black uppercase tracking-widest shadow-md';
+                statusBadge.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Booking Confirmed';
+            }
+            
             
             const modal = document.getElementById('ticketModal');
             modal.style.display = 'flex';
