@@ -15,10 +15,10 @@ $user_id = $_SESSION['user_id'];
 $user_name = explode(' ', $_SESSION['user_name'])[0];
 
 // Fetch all tickets for this user using JOIN to get bus details
-$sql = "SELECT b.booking_id, b.seat_number, b.passenger_name, bu.bus_name, bu.source, bu.destination, bu.departure_time, bu.arrival_time, bu.price, bu.journey_date, bu.bus_type 
+$sql = "SELECT b.booking_id, b.seat_number, b.passenger_name, b.final_price, bu.bus_name, bu.source, bu.destination, bu.departure_time, bu.arrival_time, bu.price, bu.journey_date, bu.bus_type 
         FROM bookings b 
         JOIN buses bu ON b.bus_id = bu.bus_id 
-        WHERE b.user_id = '$user_id'
+        WHERE b.user_id = '$user_id' AND b.payment_status = 'Success'
         ORDER BY b.booking_id DESC";
 
 $result = $conn->query($sql);

@@ -61,7 +61,19 @@ if ($conn->query($sql) == TRUE) {
         }
     }
 
-    include("confirmation_ticket.php");
+    // Redirect to payment.php with auto-submitting form
+    echo "<form id='payForm' action='payment.php' method='POST'>";
+    foreach($_POST as $key => $val) {
+        if(is_array($val)) {
+            foreach($val as $v) { echo "<input type='hidden' name='{$key}[]' value='".htmlspecialchars($v, ENT_QUOTES)."'>"; }
+        } else {
+            echo "<input type='hidden' name='$key' value='".htmlspecialchars($val, ENT_QUOTES)."'>";
+        }
+    }
+    echo "<input type='hidden' name='booking_id' value='$booking_id'>";
+    echo "</form>";
+    echo "<script>document.getElementById('payForm').submit();</script>";
+    exit();
 
 } else {
     echo "Error: " . $conn->error;

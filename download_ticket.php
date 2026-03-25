@@ -41,6 +41,9 @@ if($pass_res && $pass_res->num_rows > 0){
 $seats_array = array_filter(array_map('trim', explode(',', $ticket['seat_number'])));
 $num_seats = count($seats_array);
 $total_amount = $num_seats * $ticket['price'];
+$discount = isset($ticket['discount_amount']) ? floatval($ticket['discount_amount']) : 0;
+$final_amount = isset($ticket['final_price']) && $ticket['final_price'] !== null ? floatval($ticket['final_price']) : $total_amount;
+$coupon_code = $ticket['coupon_code'] ?? '';
 
 $dep_time = new DateTime($ticket['departure_time']);
 $arr_time = new DateTime($ticket['arrival_time']);
@@ -162,14 +165,25 @@ $qr_url = "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=" . urlenco
                         </div>
                         <div>
                             <p class="section-title">Base Fare</p>
-                            <p class="data-value">₹<?= $ticket['price'] ?> <br><span class="text-xs text-slate-500 font-normal">per seat</span></p>
+                            <p class="data-value">₹<?= $ticket['price'] ?> <br><span class="text-xs text-slate-500 font-normal">per seat (Total: ₹<?= $total_amount ?>)</span></p>
                         </div>
+                        
+                        <?php if($discount > 0): ?>
+                        <div class="col-span-2 flex justify-between items-center bg-emerald-50 p-2 rounded-lg border border-emerald-100 mt-1">
+                            <div>
+                                <p class="section-title text-emerald-600 mb-0 font-black flex items-center gap-1"><i class="fa-solid fa-tag"></i> Coupon Applied</p>
+                                <p class="text-xs font-bold text-emerald-800 bg-emerald-100 inline-block px-1.5 py-0.5 rounded mt-0.5"><?= htmlspecialchars($coupon_code) ?></p>
+                            </div>
+                            <p class="text-lg font-bold text-emerald-600">-₹<?= $discount ?></p>
+                        </div>
+                        <?php endif; ?>
+
                         <div class="col-span-2 flex justify-between items-center bg-slate-100 p-3 rounded-lg border border-slate-200 mt-1">
                             <div>
-                                <p class="section-title mb-0">Total Amount</p>
+                                <p class="section-title mb-0">Total Paid Amount</p>
                                 <p class="text-[0.65rem] text-slate-400 font-medium">Online (Paid)</p>
                             </div>
-                            <p class="text-2xl font-black text-emerald-600">₹<?= $total_amount ?></p>
+                            <p class="text-2xl font-black text-emerald-600">₹<?= $final_amount ?></p>
                         </div>
                     </div>
                 </div>

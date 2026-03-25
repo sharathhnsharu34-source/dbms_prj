@@ -18,8 +18,11 @@ $seats_str = $_POST['seat_number'];
 $seats_array = array_filter(array_map('trim', explode(',', $seats_str)));
 $num_seats = count($seats_array);
 $total_amount = $num_seats * $price;
+$discount = isset($_POST['vd_discount']) ? floatval($_POST['vd_discount']) : 0;
+$final_amount = isset($_POST['vd_final']) ? floatval($_POST['vd_final']) : $total_amount;
+$coupon_code = isset($_POST['vd_code']) ? $_POST['vd_code'] : '';
 
-$booking_id = "BUS-" . mt_rand(100000, 999999);
+$booking_id = isset($_POST['db_booking_id']) ? "BUS-" . str_pad($_POST['db_booking_id'], 5, "0", STR_PAD_LEFT) : "BUS-" . mt_rand(100000, 999999);
 $journey_date = date('d M Y'); 
 ?>
 <!DOCTYPE html>
@@ -176,14 +179,29 @@ $journey_date = date('d M Y');
                     </div>
                 </div>
 
-                <div class="bg-slate-50 p-6 rounded-2xl flex justify-between items-center border border-slate-100 shadow-inner">
-                    <div>
-                        <p class="text-[0.65rem] text-slate-400 font-bold uppercase tracking-widest mb-1.5">Total Fare</p>
-                        <p class="text-slate-500 font-semibold"><span class="font-bold text-slate-700"><?php echo $num_seats; ?></span> × ₹<?php echo $price; ?></p>
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100 shadow-inner">
+                    <div class="flex justify-between items-center mb-3">
+                        <div>
+                            <p class="text-[0.65rem] text-slate-400 font-bold uppercase tracking-widest mb-1">Base Fare</p>
+                            <p class="text-slate-500 text-sm font-semibold"><span class="font-bold text-slate-700"><?php echo $num_seats; ?></span> × ₹<?php echo $price; ?></p>
+                        </div>
+                        <p class="text-lg font-bold text-slate-700">₹<?php echo $total_amount; ?></p>
                     </div>
-                    <div class="text-right">
-                        <p class="text-4xl font-black text-rose-500 tracking-tighter">₹<?php echo $total_amount; ?></p>
-                        <p class="text-[0.6rem] text-emerald-500 font-bold uppercase tracking-widest mt-1.5 flex items-center justify-end gap-1"><i class="fa-solid fa-circle-check"></i> Paid Confirmed</p>
+                    <?php if($discount > 0): ?>
+                    <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-200 border-dashed">
+                        <div>
+                            <p class="text-[0.65rem] text-emerald-500 font-bold uppercase tracking-widest mb-1 flex items-center gap-1"><i class="fa-solid fa-tag"></i> Coupon Applied</p>
+                            <p class="text-emerald-600 text-sm font-bold bg-emerald-100/50 inline-block px-2 py-0.5 rounded"><?php echo htmlspecialchars($coupon_code); ?></p>
+                        </div>
+                        <p class="text-lg font-bold text-emerald-600">-₹<?php echo $discount; ?></p>
+                    </div>
+                    <?php endif; ?>
+                    <div class="flex justify-between items-end <?php echo $discount == 0 ? 'border-t border-slate-200 border-dashed pt-4' : ''; ?>">
+                        <div>
+                            <p class="text-[0.65rem] text-slate-400 font-bold uppercase tracking-widest mb-1">Final Paid Amount</p>
+                            <p class="text-[0.6rem] text-emerald-500 font-bold uppercase tracking-widest flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Confirmed</p>
+                        </div>
+                        <p class="text-4xl font-black text-rose-500 tracking-tighter">₹<?php echo $final_amount; ?></p>
                     </div>
                 </div>
                 
@@ -195,9 +213,12 @@ $journey_date = date('d M Y');
 
         <!-- Action Buttons -->
         <div class="mt-8 flex flex-col sm:flex-row gap-4 fade-in-up delay-200 no-print">
-            <button onclick="window.print()" class="flex-1 bg-white border border-slate-200 text-slate-700 font-bold py-3.5 px-6 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+            <button onclick="window.print()" class="flex-1 bg-white border border-slate-200 text-slate-700 font-bold py-3.5 px-6 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 border-2 border-dashed">
                 <i class="fa-solid fa-print"></i> Print Ticket
             </button>
+            <a href="index.php" class="flex-1 bg-emerald-50 text-emerald-600 border border-emerald-200 font-bold py-3.5 px-6 rounded-xl shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-house"></i> Go to Home
+            </a>
             <button onclick="downloadTicket()" class="flex-1 bg-gradient-to-r from-slate-900 to-slate-800 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
                 <i class="fa-solid fa-file-pdf"></i> Download PDF
             </button>
