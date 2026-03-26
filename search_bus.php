@@ -57,7 +57,8 @@ $result=$conn->query($sql);
                                 <span class="hidden sm:inline"><?php echo htmlspecialchars(explode(' ', $_SESSION['user_name'])[0]); ?></span>
                             </span>
                             <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl py-2 hidden group-hover:block border border-gray-100">
-                                <a href="logout.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition font-medium"><i class="fa-solid fa-right-from-bracket mr-2"></i> Logout</a>
+                                <a href="profile.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-indigo-600 transition font-medium"><i class="fa-solid fa-id-badge mr-2"></i> Profile</a>
+                                <a href="logout.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-rose-50 hover:text-rose-600 transition font-medium"><i class="fa-solid fa-right-from-bracket mr-2"></i> Logout</a>
                             </div>
                         </div>
                     <?php else: ?>
