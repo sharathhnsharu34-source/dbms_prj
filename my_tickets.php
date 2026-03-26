@@ -250,12 +250,9 @@ $result = $conn->query($sql);
                                         ';
                                         if($is_future):
                                         echo '
-                                            <form action="cancel_ticket.php" method="POST" class="m-0 p-0" onsubmit="return confirm(\'Are you sure you want to cancel this ticket? Current refund policy applies.\');">
-                                                <input type="hidden" name="booking_id" value="'.$ticket['booking_id'].'">
-                                                <button type="submit" class="text-[0.65rem] font-black text-slate-500 hover:text-white bg-slate-50 hover:bg-slate-700 transition-all border border-slate-200 uppercase tracking-widest px-3 py-2 rounded-xl shadow-sm hover:shadow-md flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-ban"></i> Cancel
-                                                </button>
-                                            </form>
+                                            <a href="cancel_ticket.php?booking_id='.$ticket['booking_id'].'" class="text-[0.65rem] font-black text-slate-500 hover:text-white bg-slate-50 hover:bg-slate-700 transition-all border border-slate-200 uppercase tracking-widest px-3 py-2 rounded-xl shadow-sm hover:shadow-md flex items-center gap-1.5 m-0">
+                                                <i class="fa-solid fa-ban"></i> Cancel
+                                            </a>
                                         ';
                                         endif;
                                         echo '

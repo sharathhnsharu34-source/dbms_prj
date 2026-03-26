@@ -19,7 +19,7 @@ $arr = isset($_GET['arr']) ? $_GET['arr'] : '00:00';
 
 $bookedSeats = [];
 
-$sql = "SELECT seat_number FROM bookings WHERE bus_id='$bus_id'";
+$sql = "SELECT seat_number FROM bookings WHERE bus_id='$bus_id' AND booking_status != 'Cancelled'";
 $result = $conn->query($sql);
 
 while($row = $result->fetch_assoc()){
