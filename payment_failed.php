@@ -9,7 +9,7 @@ if(!isset($_POST['booking_id'])) {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Payment Failed | BusBook</title>
+    <title>Bus Ticket Booking | SkylineTransit</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

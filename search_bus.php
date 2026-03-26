@@ -14,7 +14,7 @@ $result=$conn->query($sql);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Available Buses | Premium Booking</title>
+    <title>Bus Ticket Booking | SkylineTransit</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -38,7 +38,7 @@ $result=$conn->query($sql);
             <div class="flex justify-between h-16 items-center">
                 <div class="flex-shrink-0 flex items-center gap-2 cursor-pointer transition transform hover:scale-105" onclick="window.location.href='index.php'">
                     <i class="fa-solid fa-bus text-2xl text-red-500 fa-bounce" style="--fa-animation-iteration-count: 2;"></i>
-                    <span class="font-bold text-xl tracking-wide text-gray-900">Bus<span class="text-red-500">Book</span></span>
+                    <span class="font-bold text-xl tracking-wide text-gray-900">Skyline<span class="text-red-500">Transit</span></span>
                 </div>
                 <div class="flex items-center gap-6">
                     <a href="index.php" class="text-gray-500 hover:text-red-500 transition-colors font-medium flex items-center gap-2 hidden md:flex">
@@ -235,7 +235,7 @@ $result=$conn->query($sql);
 
     <!-- Optional Footer snippet -->
     <div class="mt-20 py-8 border-t border-gray-200 text-center text-sm text-gray-500 bg-white">
-        &copy; <?php echo date("Y"); ?> BusBook. All rights reserved.
+        &copy; <?php echo date("Y"); ?> SkylineTransit. All rights reserved.
     </div>
 
     <!-- Interactive Search & Live Polling Script -->

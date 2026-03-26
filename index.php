@@ -6,7 +6,7 @@ session_start();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bus Ticket Booking | Modern Transit</title>
+    <title>Bus Ticket Booking | SkylineTransit</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -41,7 +41,7 @@ session_start();
     <nav id="navbar" class="fixed w-full z-50 transition-all duration-300 bg-transparent py-4 text-white">
         <div class="container mx-auto px-6 lg:px-12 max-w-7xl flex justify-between items-center">
             <a href="index.php" class="text-2xl font-bold flex items-center gap-2 logo-text text-white transition-colors duration-300">
-                <i class="fa-solid fa-bus text-primary"></i> Voyage
+                <i class="fa-solid fa-bus text-primary"></i> SkylineTransit
             </a>
             <div class="hidden md:flex space-x-8 items-center font-medium">
                 <a href="index.php" class="nav-link">Home</a>
@@ -183,7 +183,7 @@ session_start();
     <footer class="bg-gray-900 text-gray-300 py-16">
         <div class="container mx-auto px-6 max-w-7xl grid md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
             <div>
-                <a href="#" class="text-2xl font-bold flex items-center gap-2 text-white mb-6"><i class="fa-solid fa-bus text-primary"></i> Voyage</a>
+                <a href="#" class="text-2xl font-bold flex items-center gap-2 text-white mb-6"><i class="fa-solid fa-bus text-primary"></i> SkylineTransit</a>
                 <p class="text-gray-400 mb-6 leading-relaxed">Making your interdistrict travel comfortable, affordable, and safe. Your adventure starts here.</p>
                 <div class="flex gap-4">
                     <a href="#" class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center hover:bg-primary transition-colors text-white"><i class="fa-brands fa-facebook-f"></i></a>
@@ -212,13 +212,13 @@ session_start();
                 <h4 class="text-white font-semibold mb-6 uppercase tracking-wider text-sm">Contact Us</h4>
                 <ul class="space-y-4">
                     <li class="flex items-start"><i class="fa-solid fa-phone mt-1 w-6 text-primary"></i> <span class="text-gray-400">+1 234 567 890</span></li>
-                    <li class="flex items-start"><i class="fa-solid fa-envelope mt-1 w-6 text-primary"></i> <span class="text-gray-400">info@voyagetransit.com</span></li>
+                    <li class="flex items-start"><i class="fa-solid fa-envelope mt-1 w-6 text-primary"></i> <span class="text-gray-400">info@skylinetransit.com</span></li>
                     <li class="flex items-start"><i class="fa-solid fa-location-dot mt-1 w-6 text-primary"></i> <span class="text-gray-400">123 Travel Avenue, New York, NY</span></li>
                 </ul>
             </div>
         </div>
         <div class="mt-16 pt-8 border-t border-gray-800 text-center text-gray-500 text-sm">
-            <p>&copy; 2026 Voyage Bus Ticket Booking. All rights reserved.</p>
+            <p>&copy; 2026 SkylineTransit Bus Ticket Booking. All rights reserved.</p>
         </div>
     </footer>
 

@@ -65,7 +65,7 @@ $qr_url = "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=" . urlenco
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ticket - <?= $booking_id_display ?></title>
+    <title>Ticket - <?= $booking_id_display ?> | SkylineTransit</title>
     <!-- Use Tailwind for easy markup -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -102,7 +102,7 @@ $qr_url = "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=" . urlenco
         <!-- Header -->
         <div class="bg-slate-900 border-b-4 border-rose-500 text-white p-8 flex justify-between items-center">
             <div>
-                <h1 class="text-3xl font-black tracking-tight mb-1 flex items-center gap-2"><i class="fa-solid fa-bus text-rose-500"></i> BusBook Passenger Ticket</h1>
+                <h1 class="text-3xl font-black tracking-tight mb-1 flex items-center gap-2"><i class="fa-solid fa-bus text-rose-500"></i> SkylineTransit Passenger Ticket</h1>
                 <p class="text-slate-400 font-medium tracking-wide">Your trusted travel partner</p>
             </div>
             <div class="text-right">
