@@ -19,15 +19,28 @@ $arr = isset($_GET['arr']) ? $_GET['arr'] : '00:00';
 
 $bookedSeats = [];
 
-$sql = "SELECT seat_number FROM bookings WHERE bus_id='$bus_id' AND booking_status != 'Cancelled'";
+// Clean up expired holds dynamically
+$conn->query("DELETE FROM seats WHERE status = 'Reserved' AND updated_at < NOW() - INTERVAL 5 MINUTE");
+
+$sql = "SELECT seat_number FROM bookings WHERE bus_id='$bus_id' AND booking_status != 'Cancelled' AND payment_status != 'Failed'";
 $result = $conn->query($sql);
 
 while($row = $result->fetch_assoc()){
-    // Handle cases where multiple seats were recorded as comma separated string
     $seats = explode(',', $row['seat_number']);
     foreach($seats as $s){
         if(trim($s) !== '') {
             $bookedSeats[] = trim($s);
+        }
+    }
+}
+
+$heldSeats = [];
+$hold_sql = "SELECT seat_number, session_id FROM seats WHERE bus_id='$bus_id'";
+$hold_res = $conn->query($hold_sql);
+if($hold_res && $hold_res->num_rows > 0) {
+    while($row = $hold_res->fetch_assoc()){
+        if($row['session_id'] !== session_id()) {
+            $heldSeats[] = $row['seat_number'];
         }
     }
 }
@@ -276,9 +289,10 @@ while($row = $result->fetch_assoc()){
                             <?php
                             $seat_price = $price;
                             for($i=1; $i<=32; $i++) {
-                                // Add booked class if seat is booked
                                 if(in_array($i, $bookedSeats)) {
                                     echo "<div class='seat booked' title='Seat $i (Booked)'>$i</div>";
+                                } elseif(in_array($i, $heldSeats)) {
+                                    echo "<div class='seat booked' title='Seat $i (Currently Held by someone else)' style='background-image: none; background-color: #fef08a; border-color: #fde047; color: #a16207; cursor: not-allowed;'>$i</div>";
                                 } else {
                                     echo "<div class='seat' id='seat_$i' onclick='toggleSeat($i, $seat_price)' title='Seat $i'>$i</div>";
                                 }
@@ -392,16 +406,55 @@ while($row = $result->fetch_assoc()){
         
         function toggleSeat(seatNum, price) {
             const seatEl = document.getElementById('seat_' + seatNum);
+            const busId = document.querySelector('input[name="bus_id"]').value;
             
             if (seatEl.classList.contains('selected')) {
-                seatEl.classList.remove('selected');
-                selectedSeats = selectedSeats.filter(s => s !== String(seatNum) && s !== seatNum);
+                const fd = new FormData();
+                fd.append('bus_id', busId);
+                fd.append('seat_number', seatNum);
+                fd.append('action', 'release');
+                
+                fetch('api/hold_seat.php', { method: 'POST', body: fd })
+                .then(res => res.json())
+                .then(json => {
+                    seatEl.classList.remove('selected');
+                    selectedSeats = selectedSeats.filter(s => s !== String(seatNum) && s !== seatNum);
+                    updateSummary(price);
+                })
+                .catch(err => console.error('Release error', err));
+                
             } else {
-                seatEl.classList.add('selected');
-                selectedSeats.push(seatNum);
+                seatEl.style.opacity = '0.5';
+                
+                const fd = new FormData();
+                fd.append('bus_id', busId);
+                fd.append('seat_number', seatNum);
+                fd.append('action', 'hold');
+                
+                fetch('api/hold_seat.php', { method: 'POST', body: fd })
+                .then(res => res.json())
+                .then(json => {
+                    seatEl.style.opacity = '1';
+                    if(json.success) {
+                        seatEl.classList.add('selected');
+                        selectedSeats.push(seatNum);
+                        updateSummary(price);
+                    } else {
+                        alert(json.error || "Seat already reserved by someone else, please refresh or select another.");
+                        seatEl.classList.add('booked');
+                        seatEl.style.backgroundImage = 'none';
+                        seatEl.style.backgroundColor = '#fef08a';
+                        seatEl.style.borderColor = '#fde047';
+                        seatEl.style.color = '#a16207';
+                        seatEl.onclick = null;
+                        seatEl.title = 'Seat ' + seatNum + ' (Held)';
+                    }
+                })
+                .catch(err => {
+                    console.error('Hold error', err);
+                    seatEl.style.opacity = '1';
+                });
             }
-            
-            updateSummary(price);
         }
         
         function updateSummary(pricePerSeat) {

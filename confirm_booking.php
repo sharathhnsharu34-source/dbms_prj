@@ -24,15 +24,26 @@ $primary_email_esc = $conn->real_escape_string($primary_email);
 $seat_esc = $conn->real_escape_string($seat);
 $bus_id_esc = $conn->real_escape_string($bus_id);
 
+// Verify exact latest availability reliably preventing race conditions during checkout
+$seats_array = array_filter(array_map('trim', explode(',', $seat)));
+foreach ($seats_array as $s) {
+    $s_esc = $conn->real_escape_string($s);
+    $chk = $conn->query("SELECT booking_id FROM bookings WHERE bus_id='$bus_id_esc' AND FIND_IN_SET('$s_esc', seat_number) AND booking_status != 'Cancelled' AND payment_status != 'Failed'");
+    if($chk && $chk->num_rows > 0) {
+        die("<script>alert('Unfortunately, Seat {$s} was just confirmed by another user while you were filling details. Please select a different seat.'); window.location.href='book.php?bus_id=$bus_id_esc';</script>");
+    }
+}
+
+// Convert temporary hold locks gracefully protecting capacity counts
+$sess_id = session_id();
+$conn->query("DELETE FROM seats WHERE bus_id='$bus_id_esc' AND session_id='$sess_id' AND status='Reserved'");
+
 // Insert into bookings table
 $sql = "INSERT INTO bookings (bus_id, passenger_name, seat_number, user_id, primary_phone, primary_email)
 VALUES ('$bus_id_esc', '$primary_name', '$seat_esc', $user_id, '$primary_phone_esc', '$primary_email_esc')";
 
 if ($conn->query($sql) == TRUE) {
     $booking_id = $conn->insert_id;
-    
-    // Insert each passenger
-    $seats_array = array_filter(array_map('trim', explode(',', $seat)));
     
     // Default passenger name format for ticket (e.g. "John Doe + 2")
     $ticket_passenger_name = $primary_name;

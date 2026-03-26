@@ -84,11 +84,11 @@ $result=$conn->query($sql);
                 <p class="text-gray-300 font-medium tracking-wide"><i class="fa-regular fa-calendar-check mr-2 text-red-400"></i> Showing available buses for today</p>
             </div>
             
-            <!-- Static Filter Bar -->
-            <div class="flex bg-white/10 backdrop-blur-md rounded-xl p-1 shadow-inner border border-white/10 text-sm font-semibold overflow-x-auto max-w-full no-scrollbar">
-                <button class="px-6 py-2.5 rounded-lg bg-white text-slate-900 shadow-sm transition transform hover:scale-105 whitespace-nowrap">Cheapest First</button>
-                <button class="px-6 py-2.5 rounded-lg text-white hover:bg-white/20 transition whitespace-nowrap">Fastest First</button>
-                <button class="px-6 py-2.5 rounded-lg text-white hover:bg-white/20 transition whitespace-nowrap">Early Departure</button>
+            <!-- Dynamic Filter Bar -->
+            <div class="flex bg-white/10 backdrop-blur-md rounded-xl p-1 shadow-inner border border-white/10 text-sm font-semibold overflow-x-auto max-w-full no-scrollbar" id="sort-bar">
+                <button class="px-6 py-2.5 rounded-lg bg-white text-slate-900 shadow-sm transition transform hover:scale-105 whitespace-nowrap sort-btn" data-sort="price">Cheapest First</button>
+                <button class="px-6 py-2.5 rounded-lg text-white hover:bg-white/20 transition whitespace-nowrap sort-btn" data-sort="fastest">Fastest First</button>
+                <button class="px-6 py-2.5 rounded-lg text-white hover:bg-white/20 transition whitespace-nowrap sort-btn" data-sort="early">Early Departure</button>
             </div>
         </div>
     </div>
@@ -108,19 +108,19 @@ $result=$conn->query($sql);
                         <h4 class="font-semibold text-gray-400 mb-4 text-xs uppercase tracking-widest border-b pb-2">Bus Type</h4>
                         <div class="space-y-3">
                             <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" checked class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-500 transition">
+                                <input type="checkbox" checked value="AC" class="bus-filter w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-500 transition">
                                 <span class="text-gray-600 group-hover:text-gray-900 font-medium">AC</span>
                             </label>
                             <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" checked class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-500 transition">
+                                <input type="checkbox" checked value="Non-AC" class="bus-filter w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-500 transition">
                                 <span class="text-gray-600 group-hover:text-gray-900 font-medium">Non-AC</span>
                             </label>
                             <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" checked class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-500 transition">
+                                <input type="checkbox" checked value="Sleeper" class="bus-filter w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-500 transition">
                                 <span class="text-gray-600 group-hover:text-gray-900 font-medium">Sleeper</span>
                             </label>
                             <label class="flex items-center gap-3 cursor-pointer group">
-                                <input type="checkbox" checked class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-500 transition">
+                                <input type="checkbox" checked value="Seater" class="bus-filter w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500 accent-red-500 transition">
                                 <span class="text-gray-600 group-hover:text-gray-900 font-medium">Seater</span>
                             </label>
                         </div>
@@ -129,24 +129,44 @@ $result=$conn->query($sql);
             </div>
 
             <!-- Main Content (Bus Cards) -->
-            <div class="w-full lg:w-3/4 flex flex-col gap-6">
+            <div class="w-full lg:w-3/4 flex flex-col gap-6" id="bus-results" style="transition: opacity 0.3s ease;">
                 
                 <?php
                 if($result->num_rows>0){
                     while($row=$result->fetch_assoc()){
-                        // Generating random UI data for visuals
-                        $bus_types = ['A/C Sleeper (2+1)', 'Non A/C Seater (2+2)', 'Volvo A/C Semi Sleeper', 'Scania A/C Multi Axle'];
-                        $bus_type = $bus_types[$row['bus_id'] % 4];
-                        $seats_left = mt_rand(2, 25);
+                        $bus_type = $row['bus_type'];
+                        if(empty($bus_type) || trim($bus_type) == '') $bus_type = 'Non-AC';
+                        
+                        // Count officially booked seats
+                        $b_id = $row['bus_id'];
+                        $seat_sql = "SELECT seat_number FROM bookings WHERE bus_id='$b_id' AND booking_status != 'Cancelled' AND payment_status != 'Failed'";
+                        $seat_res = $conn->query($seat_sql);
+                        $hc = 0;
+                        if($seat_res && $seat_res->num_rows > 0) {
+                            while($srow = $seat_res->fetch_assoc()) {
+                                $c_a = explode(',', $srow['seat_number']);
+                                foreach($c_a as $s) { if(trim($s) !== '') $hc++; }
+                            }
+                        }
+                        
+                        // Count Reserved holds explicitly
+                        $hold_sql = "SELECT COUNT(*) as held FROM seats WHERE bus_id='$b_id' AND status='Reserved' AND updated_at >= NOW() - INTERVAL 5 MINUTE";
+                        $hold_res = $conn->query($hold_sql);
+                        $held = ($hold_res && $hold_res->num_rows > 0) ? $hold_res->fetch_assoc()['held'] : 0;
+                        
+                        $seats_left = max(0, 32 - $hc - $held);
+
+                        mt_srand($row['bus_id']);
                         $rating = number_format(mt_rand(35, 49) / 10, 1);
                         $reviews = mt_rand(10, 300);
+                        mt_srand();
                         
                         // Maintain existing GET logic of book.php while injecting extra purely visual parameters
                         $book_url = "book.php?bus_id=".$row['bus_id']."&src=".urlencode($source)."&dest=".urlencode($destination)."&price=".$row['price']."&type=".urlencode($bus_type)."&dep=".urlencode($row['departure_time'])."&arr=".urlencode($row['arrival_time'])."&bname=".urlencode($row['bus_name']);
 
                         echo '
                         <!-- Bus Card -->
-                        <div class="bg-white rounded-[1.25rem] shadow-sm hover-scale border border-gray-100/80 overflow-hidden flex flex-col md:flex-row group transition-all">
+                        <div class="bg-white rounded-[1.25rem] shadow-sm hover-scale border border-gray-100/80 overflow-hidden flex flex-col md:flex-row group transition-all" data-bus-id="'.$row['bus_id'].'">
                             <!-- Left: Image/Brand -->
                             <div class="md:w-[28%] bg-slate-50 p-6 flex flex-col justify-center border-r border-gray-100 relative group-hover:bg-red-50/30 transition-colors">
                                 <div class="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-red-500 to-rose-400"></div>
@@ -185,8 +205,8 @@ $result=$conn->query($sql);
                             <div class="md:w-[28%] p-6 flex flex-col justify-center items-end border-l border-gray-100 bg-white">
                                 <p class="text-xs text-slate-400 mb-0.5 line-through font-medium">₹'.($row['price'] + mt_rand(150, 400)).'</p>
                                 <h3 class="text-3xl font-extrabold text-slate-800 mb-3 tracking-tight">₹'.$row['price'].'</h3>
-                                <p class="text-xs font-bold '.($seats_left < 5 ? 'text-red-500 bg-red-50' : 'text-emerald-600 bg-emerald-50').' mb-5 px-2.5 py-1 rounded w-max self-end border '.($seats_left < 5 ? 'border-red-100' : 'border-emerald-100').'">
-                                    <i class="fa-solid fa-couch mr-1"></i> '.$seats_left.' Seats left
+                                <p class="seat-counter text-xs font-bold '.($seats_left < 5 ? 'text-red-500 bg-red-50 border-red-100' : 'text-emerald-600 bg-emerald-50 border-emerald-100').' mb-5 px-2.5 py-1 rounded w-max self-end border" id="seat_count_'.$row['bus_id'].'">
+                                    <i class="fa-solid fa-couch mr-1"></i> <span>'.$seats_left.'</span> Seats left
                                 </p>
                                 <a href="'.$book_url.'" class="w-full text-center py-3.5 rounded-xl text-white font-bold btn-gradient shadow-md tracking-wide text-sm flex items-center justify-center gap-2">
                                     VIEW SEATS <i class="fa-solid fa-chevron-right text-xs"></i>
@@ -218,5 +238,87 @@ $result=$conn->query($sql);
         &copy; <?php echo date("Y"); ?> BusBook. All rights reserved.
     </div>
 
+    <!-- Interactive Search & Live Polling Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const source = "<?php echo addslashes($source); ?>";
+            const destination = "<?php echo addslashes($destination); ?>";
+            let currentSort = 'price'; 
+            
+            const resultsContainer = document.getElementById('bus-results');
+            const filterCheckboxes = document.querySelectorAll('.bus-filter');
+            const sortButtons = document.querySelectorAll('.sort-btn');
+            
+            filterCheckboxes.forEach(cb => cb.addEventListener('change', fetchBuses));
+            
+            sortButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    sortButtons.forEach(b => {
+                        b.classList.remove('bg-white', 'text-slate-900', 'shadow-sm', 'transform', 'hover:scale-105');
+                        b.classList.add('text-white', 'hover:bg-white/20');
+                    });
+                    const target = e.target;
+                    target.classList.remove('text-white', 'hover:bg-white/20');
+                    target.classList.add('bg-white', 'text-slate-900', 'shadow-sm', 'transform', 'hover:scale-105');
+                    
+                    currentSort = target.getAttribute('data-sort');
+                    fetchBuses();
+                });
+            });
+            
+            function fetchBuses() {
+                resultsContainer.style.opacity = '0.5';
+                
+                const activeFilters = Array.from(filterCheckboxes)
+                                           .filter(cb => cb.checked)
+                                           .map(cb => cb.value);
+                
+                const formData = new FormData();
+                formData.append('source', source);
+                formData.append('destination', destination);
+                formData.append('filters', JSON.stringify(activeFilters));
+                formData.append('sort', currentSort);
+                
+                fetch('api/fetch_buses.php', { method: 'POST', body: formData })
+                .then(res => res.text())
+                .then(html => {
+                    resultsContainer.innerHTML = html;
+                    resultsContainer.style.opacity = '1';
+                })
+                .catch(err => {
+                    console.error('Fetch error:', err);
+                    resultsContainer.style.opacity = '1';
+                });
+            }
+            
+            setInterval(() => {
+                const busCards = document.querySelectorAll('[data-bus-id]');
+                if(busCards.length === 0) return;
+                
+                const ids = Array.from(busCards).map(card => card.getAttribute('data-bus-id'));
+                const fd = new FormData();
+                fd.append('bus_ids', JSON.stringify(ids));
+                
+                fetch('api/live_seats.php', { method: 'POST', body: fd })
+                .then(res => res.json())
+                .then(json => {
+                    if(json.success && json.data) {
+                        for(const [bId, count] of Object.entries(json.data)) {
+                            const counterEl = document.getElementById('seat_count_' + bId);
+                            if(counterEl) {
+                                counterEl.querySelector('span').innerText = count;
+                                if(count < 5) {
+                                    counterEl.className = 'seat-counter text-xs font-bold text-red-500 bg-red-50 mb-5 px-2.5 py-1 rounded w-max self-end border border-red-100';
+                                } else {
+                                    counterEl.className = 'seat-counter text-xs font-bold text-emerald-600 bg-emerald-50 mb-5 px-2.5 py-1 rounded w-max self-end border border-emerald-100';
+                                }
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.error('Live seats poll failed:', err));
+            }, 5000); 
+        });
+    </script>
 </body>
 </html>
