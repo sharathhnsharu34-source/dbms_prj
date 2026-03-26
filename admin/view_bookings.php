@@ -255,7 +255,13 @@ if ($bus_result) {
                     foreach($buses as $index => $bus): 
                         $bus_id = $bus['bus_id'];
                         $bookings = $bus['bookings'];
-                        $booking_count = count($bookings);
+                        // Fix Seat Count to ignore Cancelled bookings and accurately count multiple seats
+                        $active_bookings = array_filter($bookings, function($b) { return $b['booking_status'] !== 'Cancelled'; });
+                        $booking_count = 0;
+                        foreach($active_bookings as $b) {
+                            $seats_arr = array_filter(explode(',', $b['seat_number']));
+                            $booking_count += count($seats_arr);
+                        }
                         
                         // Derived or mock attributes
                         $total_seats = 40; // Default hypothetical capacity
@@ -362,10 +368,15 @@ if ($bus_result) {
                                         </td>
                                         
                                         <td class="py-4 px-6">
-                                            <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-lg shadow-sm">
-                                                <i class="fa-solid fa-couch text-emerald-500 text-xs"></i>
-                                                <span class="text-emerald-700 font-bold text-sm">S-<?= htmlspecialchars($row['seat_number']) ?></span>
+                                            <div class="inline-flex items-center gap-2 <?= $row['booking_status'] === 'Cancelled' ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100' ?> px-3 py-1.5 rounded-lg shadow-sm">
+                                                <i class="fa-solid fa-couch <?= $row['booking_status'] === 'Cancelled' ? 'text-rose-500' : 'text-emerald-500' ?> text-xs"></i>
+                                                <span class="<?= $row['booking_status'] === 'Cancelled' ? 'text-rose-700 line-through opacity-70' : 'text-emerald-700' ?> font-bold text-sm">S-<?= htmlspecialchars($row['seat_number']) ?></span>
                                             </div>
+                                            <?php if($row['booking_status'] === 'Cancelled'): ?>
+                                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase tracking-wider shadow-sm">
+                                                    Cancelled
+                                                </span>
+                                            <?php endif; ?>
                                         </td>
 
                                     </tr>
