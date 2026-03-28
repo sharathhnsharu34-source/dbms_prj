@@ -12,7 +12,7 @@ if(empty($source) || empty($destination)) {
     exit;
 }
 
-$sql = "SELECT * FROM buses WHERE source='$source' AND destination='$destination'";
+$sql = "SELECT * FROM buses WHERE bus_id IN (SELECT MIN(bus_id) FROM buses WHERE source='$source' AND destination='$destination' GROUP BY bus_name, source, destination, departure_time)";
 $result = $conn->query($sql);
 
 $buses = [];
