@@ -50,9 +50,12 @@ session_start();
                 
                 <?php if(isset($_SESSION['user_id'])): ?>
                     <a href="my_tickets.php" class="nav-link"><i class="fa-solid fa-ticket text-primary mr-1"></i> My Tickets</a>
-                    <div class="relative group cursor-pointer h-full flex items-center">
-                        <span class="nav-link font-bold text-primary">Welcome, <?php echo htmlspecialchars(explode(' ', $_SESSION['user_name'])[0]); ?></span>
-                        <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 hidden group-hover:block border border-gray-100">
+                    <div class="relative h-full flex items-center" id="userDropdownWrapper">
+                        <button onclick="toggleUserDropdown(event)" class="bg-primary hover:bg-red-600 text-white px-5 py-2 rounded-full transition-transform transform hover:scale-105 shadow-md flex items-center gap-2 font-medium focus:outline-none">
+                            Welcome, <?php echo htmlspecialchars(explode(' ', $_SESSION['user_name'])[0]); ?>
+                            <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300" id="userDropdownIcon"></i>
+                        </button>
+                        <div id="userDropdownMenu" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 invisible opacity-0 translate-y-2 transition-all duration-300 border border-gray-100">
                             <a href="profile.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-slate-50 hover:text-indigo-600 transition font-medium"><i class="fa-solid fa-id-badge mr-2"></i> Profile</a>
                             <a href="logout.php" class="block px-4 py-2 text-sm text-gray-700 hover:bg-rose-50 hover:text-rose-600 transition font-medium"><i class="fa-solid fa-right-from-bracket mr-2"></i> Logout</a>
                         </div>
@@ -227,6 +230,37 @@ session_start();
         document.addEventListener('DOMContentLoaded', function() {
             AOS.init({ once: true, offset: 50 });
             const navbar = document.getElementById('navbar');
+            
+            window.toggleUserDropdown = function(event) {
+                event.stopPropagation();
+                const menu = document.getElementById('userDropdownMenu');
+                const icon = document.getElementById('userDropdownIcon');
+                
+                if (menu.classList.contains('invisible')) {
+                    menu.classList.remove('invisible', 'opacity-0', 'translate-y-2');
+                    menu.classList.add('visible', 'opacity-100', 'translate-y-0');
+                    icon.classList.add('rotate-180');
+                } else {
+                    menu.classList.add('invisible', 'opacity-0', 'translate-y-2');
+                    menu.classList.remove('visible', 'opacity-100', 'translate-y-0');
+                    icon.classList.remove('rotate-180');
+                }
+            };
+
+            document.addEventListener('click', function(event) {
+                const wrapper = document.getElementById('userDropdownWrapper');
+                const menu = document.getElementById('userDropdownMenu');
+                const icon = document.getElementById('userDropdownIcon');
+                
+                if (wrapper && !wrapper.contains(event.target)) {
+                    if (menu && !menu.classList.contains('invisible')) {
+                        menu.classList.add('invisible', 'opacity-0', 'translate-y-2');
+                        menu.classList.remove('visible', 'opacity-100', 'translate-y-0');
+                        icon.classList.remove('rotate-180');
+                    }
+                }
+            });
+
             window.addEventListener('scroll', () => {
                 if (window.scrollY > 50) {
                     navbar.classList.add('nav-scrolled');

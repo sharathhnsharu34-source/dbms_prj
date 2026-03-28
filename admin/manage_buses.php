@@ -129,10 +129,7 @@ if($buses_result) {
                         <i class="fa-solid fa-bus text-xs"></i> 
                         <span class="hidden lg:inline">Buses</span>
                     </a>
-                    <a href="manage_routes.php" class="flex items-center justify-center gap-2 bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm">
-                        <i class="fa-solid fa-route text-xs"></i> 
-                        <span class="hidden lg:inline">Routes</span>
-                    </a>
+
                     <div class="w-px h-6 bg-slate-200 hidden md:block mx-1"></div>
                     <a href="../index.php" class="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md transform hover:-translate-y-0.5">
                         <i class="fa-solid fa-arrow-left text-xs"></i> 

@@ -91,7 +91,7 @@ $qr_url = "https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=" . urlenco
         <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold shadow-md transition-colors">
             <i class="fa-solid fa-print"></i> Print / Save PDF
         </button>
-        <button onclick="window.close()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg font-semibold shadow-md transition-colors ml-3">
+        <button onclick="window.history.back()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-lg font-semibold shadow-md transition-colors ml-3">
             Close
         </button>
     </div>

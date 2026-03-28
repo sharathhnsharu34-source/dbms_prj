@@ -89,9 +89,7 @@ if($selected_bus_id > 0) {
                     <a href="manage_buses.php" class="flex items-center justify-center gap-2 bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm">
                         <i class="fa-solid fa-bus text-xs"></i> <span class="hidden lg:inline">Buses</span>
                     </a>
-                    <a href="manage_routes.php" class="flex items-center justify-center gap-2 bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm">
-                        <i class="fa-solid fa-route text-xs"></i> <span class="hidden lg:inline">Routes</span>
-                    </a>
+
                     <a href="manage_points.php" class="flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 border border-indigo-200 hover:bg-indigo-100 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm">
                         <i class="fa-solid fa-map-location-dot text-xs"></i> <span class="hidden lg:inline">Points</span>
                     </a>
